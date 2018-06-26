@@ -1,0 +1,234 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resource_group_name": {
+      "type": "string",
+      "defaultValue": "default-appservice-module",
+      "metadata": {
+        "description": "resource_group_name"
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "regions": "[if(equals(variables('location'), 'westeurope'), 'euw', 'eun')]",
+    "app_count": "[length(parameters('app_name'))]",
+
+    "locEnv": "[concat(variables('regions'), '-',parameters('environment_name'))]",
+    "serverfarmName": "[concat(parameters('app_name_plan'), '-apps-', variables('locEnv'))]",
+    "trafManagerProfileName": "[concat(parameters('app_name_plan'),'-tmp-global-', parameters('environment_name'))]",
+    "insightComponentName": "[concat(parameters('app_name_plan'), '-ins-', variables('locEnv'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
+      "name": "[variables('serverfarmName')]",
+      "tags": "[parameters('tags')]",
+      "location": "[variables('location')]",
+      "properties": {},
+      "sku": {
+        "name": "S1",
+        "tier": "standard",
+        "size": "S1"
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "name": "[variables('insightComponentName')]",
+      "dependsOn": [ "[variables('trafManagerProfileName')]" ],
+      "apiVersion": "2015-05-01",
+      "location": "[variables('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "Application_Type": "web",
+        "applicationId": "[variables('insightComponentName')]"
+      }
+    },
+    {
+      "type": "microsoft.insights/alertrules",
+      "name": "[concat('CPU ', variables('insightComponentName'))]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-01",
+      "dependsOn": [ "[resourceId('microsoft.insights/components', variables('insightComponentName'))]" ],
+      "tags": {
+        "[concat('hidden-link:', resourceId('Microsoft.Insights/components', variables('insightComponentName')))]": "Resource"
+      },
+      "properties": {
+        "name": "[concat('CPU ', variables('insightComponentName'))]",
+        "isEnabled": true,
+        "condition": {
+          "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition, Microsoft.WindowsAzure.Management.Mon.Client",
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource": {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[resourceId('microsoft.insights/components', variables('insightComponentName'))]",
+            "metricName": "performanceCounter.percentage_processor_time_normalized.value"
+          },
+          "operator": "GreaterThan",
+          "threshold": 85,
+          "windowSize": "PT5M"
+
+        },
+        "actions": [
+          {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+            "sendToServiceOwners": false,
+            "customEmails": [ "[parameters('alertReceiver')]" ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "microsoft.insights/alertrules",
+      "name": "[concat('Server response time ', variables('insightComponentName'))]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-01",
+      "dependsOn": [ "[resourceId('microsoft.insights/components', variables('insightComponentName'))]" ],
+      "tags": {
+        "[concat('hidden-link:', resourceId('Microsoft.Insights/components', variables('insightComponentName')))]": "Resource"
+      },
+      "properties": {
+        "name": "[concat('Server response time ', variables('insightComponentName'))]",
+        "isEnabled": true,
+        "condition": {
+          "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition, Microsoft.WindowsAzure.Management.Mon.Client",
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource": {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[resourceId('microsoft.insights/components', variables('insightComponentName'))]",
+            "metricName": "request.duration"
+          },
+          "operator": "GreaterThan",
+          "threshold": 1,
+          "windowSize": "PT15M"
+
+        },
+        "actions": [
+          {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+            "sendToServiceOwners": false,
+            "customEmails": [ "[parameters('alertReceiver')]" ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "microsoft.insights/alertrules",
+      "name": "[concat('Failed requests ', variables('insightComponentName'))]",
+      "location": "[variables('location')]",
+      "apiVersion": "2016-03-01",
+      "dependsOn": [ "[resourceId('microsoft.insights/components', variables('insightComponentName'))]" ],
+      "tags": {
+        "[concat('hidden-link:', resourceId('Microsoft.Insights/components', variables('insightComponentName')))]": "Resource"
+      },
+      "properties": {
+        "name": "[concat('Failed requests ', variables('insightComponentName'))]",
+        "isEnabled": true,
+        "condition": {
+          "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition, Microsoft.WindowsAzure.Management.Mon.Client",
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource": {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[resourceId('microsoft.insights/components', variables('insightComponentName'))]",
+            "metricName": "requestFailed.count"
+          },
+          "operator": "GreaterThan",
+          "threshold": 1,
+          "windowSize": "PT15M"
+
+        },
+        "actions": [
+          {
+            "$type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction, Microsoft.WindowsAzure.Management.Mon.Client",
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+            "sendToServiceOwners": false,
+            "customEmails": [ "[parameters('alertReceiver')]" ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "condition": "[equals(parameters('trafic_manager_profile'), 'true')]",
+      "dependsOn": [ "[variables('serverfarmName')]" ],
+      "apiVersion": "2017-05-01",
+      "location": "global",
+      "name": "[variables('trafManagerProfileName')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "trafficRoutingMethod": "Weighted",
+        "dnsConfig": {
+          "relativeName": "[concat(parameters('app_name_plan'),'-arm-tmp-global-', parameters('environment_name'))]",
+          "ttl": "[parameters('dns_ttl')]"
+        },
+        "monitorConfig": {
+          "protocol": "HTTPS",
+          "port": "443",
+          "path": "[parameters('path')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles/ExternalEndpoints",
+      "name": "[concat(variables('trafManagerProfileName'), '/Endpoint', copyIndex())]",
+      "condition": "[equals(parameters('app-tmp-endpoint'), 'true')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/trafficManagerProfiles/', variables('trafManagerProfileName'))]",
+        "[concat(parameters('app_name')[copyIndex()], '-apps-', variables('locEnv'))]"
+      ],
+      "location": "global",
+      "properties": {
+        "target": "[concat(parameters('app_name')[copyIndex()], '-apps-', variables('locEnv'))]",
+        "endpointStatus": "Enabled"
+      },
+      "copy": {
+        "count": "[variables('app_count')]",
+        "name": "app_copy"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "name": "[concat(parameters('app_name')[copyIndex()], '-apps-', variables('locEnv'))]",
+      "apiVersion": "2016-08-01",
+      "location": "[variables('location')]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverfarmName'))]",
+        "siteConfig": {
+          "defaultDocuments": [ "Default.htm", "Default.html", "Default.asp", "index.htm", "index.html", "iisstart.htm", "default.aspx", "index.php", "hostingstart.html" ],
+          "netFrameworkVersion": "v4.6",
+          "use32BitWorkerProcess": "[parameters('use_32_bit_worker_process')]",
+          "appSettings": [
+            {
+              "name": "AppInsightsInstrumentationKey",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('insightComponentName')), '2014-04-01').InstrumentationKey]"
+            },
+            {
+              "name": "WebsiteTimeZone",
+              "value": "[parameters('websitetimezone')]"
+            }
+          ]
+        }
+      },
+      "copy": {
+        "count": "[variables('app_count')]",
+        "name": "app_copy"
+      }
+    }
+  ],
+
+
+      "outputs": {
+        "region": {
+          "type": "string",
+          "value": "[variables('regions')]"
+        }
+      }
+    }

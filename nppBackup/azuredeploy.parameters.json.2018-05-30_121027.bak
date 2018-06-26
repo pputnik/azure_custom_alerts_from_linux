@@ -1,0 +1,93 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resource_group_name": {
+      "value": "rg.cybercom.Cloud.Alex_test.ARM"
+    },
+    "app_name": {
+      "value": [ "helferapiarm", "helferarm" ]
+    },
+    "app_name_plan": {
+      "value": "helferapiarm-plan"
+    },
+    "environment_name": {
+      "value": "beta"
+    },
+    "sku_tier": {
+      "value": "Standard"
+    },
+    "sku_size": {
+      "value": "S1"
+    },
+    "tags": {
+      "value": {
+        "availability": "24x7",
+        "billTo": "pracuj",
+        "deployType": "ARM",
+        "environment": "beta",
+        "managedBy": "bartlomiej.kuzma@pracuj.pl",
+        "projectName": "GP.helfer",
+        "serviceType": "PaaS",
+        "teamName": "mightandmagic",
+        "tier": "front",
+        "type": "application"
+      }
+    },
+    "app_settings": {
+      "value": {
+        "tag1": "",
+        "tag2": ""
+      }
+    },
+    "onpremise-tmp-endpoint": {
+      "value": "false"
+    },
+    "trafic_manager_profile": {
+      "value": "true"
+    },
+    "app-tmp-endpoint": {
+      "value": "true"
+    },
+    "dns_url": {
+      "value": "pracuj.pl"
+    },
+    "azure_tmp_weight": {
+      "value": "50"
+    },
+    "onpremise_tmp_weight": {
+      "value": "50"
+    },
+    "subscription": {
+      "value": ""
+    },
+    "secret": {
+      "value": ""
+    },
+    "id": {
+      "value": ""
+    },
+    "pfxpassword": {
+      "value": ""
+    },
+    "fqdn": {
+      "value": [ "mytest.cybercom.pl", "mytest2.cybercom.pl" ]
+    },
+    "dns_ttl": {
+      "value": "300"
+    },
+    "use_32_bit_worker_process": {
+      "value": "true"
+    },
+    "path": {
+      "value": "/docs/index"
+    },
+    "websitetimezone": {
+      "value": "UTC"
+    },
+    "alertReceiver": {
+      "value": "alexander.lutchko@cybercom.com"
+
+    }
+  }
+}

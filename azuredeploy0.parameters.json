@@ -1,0 +1,16 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resource_group_name": {
+      "value": "rg.cybercom.Cloud.Alex_test.OMS"
+    },
+    "vmss_name": {
+      "value": "vmssOMS"
+         },
+	"subnets_default_name": {
+            "value": "vmssOMS_subnet"
+   }
+
+  }
+}
